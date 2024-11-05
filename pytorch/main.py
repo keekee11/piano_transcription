@@ -26,6 +26,60 @@ from losses import get_loss_func
 from evaluate import SegmentEvaluator
 import config
 
+def note_to_pitch(note):
+    """音名を音程番号に変換するヘルパー関数。"""
+    note_mapping = {
+        'C': 0, 'C#': 1, 'D': 2, 'D#': 3,
+        'E': 4, 'F': 5, 'F#': 6, 'G': 7,
+        'G#': 8, 'A': 9, 'A#': 10, 'B': 11
+    }
+    return note_mapping.get(note, -1)
+
+def detect_chord_type(notes):
+    """和音の種類を自動判定（簡略化した判定）"""
+    # 最低音ともう1つの音との間隔で簡易的に判定
+    if len(notes) < 2:
+        return "major"
+    lowest_note = min(notes, key=note_to_pitch)
+    other_note = notes[1]  # 次の最低音を選択
+    interval = (note_to_pitch(other_note) - note_to_pitch(lowest_note)) % 12
+    
+    if interval in [3, 8]:  # マイナーに特有の間隔
+        return "minor"
+    return "major"
+
+def generate_left_hand_chord(note_events):
+    """最低音に基づいて自動でメジャー・マイナー和音を生成します。"""
+    chord_mappings = {
+        'C': {'major': ['C', 'E', 'G'], 'minor': ['C', 'D#', 'G']},
+        'C#': {'major': ['C#', 'E#', 'G#'], 'minor': ['C#', 'E', 'G#']},
+        'D': {'major': ['D', 'F#', 'A'], 'minor': ['D', 'F', 'A']},
+        'D#': {'major': ['D#', 'F##', 'A#'], 'minor': ['D#', 'F#', 'A#']},
+        'E': {'major': ['E', 'G#', 'B'], 'minor': ['E', 'G', 'B']},
+        'F': {'major': ['F', 'A', 'C'], 'minor': ['F', 'G#', 'C']},
+        'F#': {'major': ['F#', 'A#', 'C#'], 'minor': ['F#', 'A', 'C#']},
+        'G': {'major': ['G', 'B', 'D'], 'minor': ['G', 'A#', 'D']},
+        'G#': {'major': ['G#', 'B#', 'D#'], 'minor': ['G#', 'B', 'D#']},
+        'A': {'major': ['A', 'C#', 'E'], 'minor': ['A', 'C', 'E']},
+        'A#': {'major': ['A#', 'C##', 'E#'], 'minor': ['A#', 'C#', 'E#']},
+        'B': {'major': ['B', 'D#', 'F#'], 'minor': ['B', 'D', 'F#']}
+    }
+    
+    left_hand_chords = []
+    for notes in note_events:
+        if not notes:
+            left_hand_chords.append([])
+            continue
+
+        lowest_note = min(notes, key=note_to_pitch)
+        chord_type = detect_chord_type(notes)  # 自動判定された和音タイプ
+        chord = chord_mappings.get(lowest_note, {}).get(chord_type, [])
+        left_hand_chords.append(chord)
+
+    print(f"Generated left-hand chords: {left_hand_chords}")
+    return left_hand_chords
+
+
 
 def train(args):
     """Train a piano transcription system.
@@ -253,7 +307,11 @@ def train(args):
 
         loss = loss_func(model, batch_output_dict, batch_data_dict)
 
-        print(iteration, loss)
+        note_events = batch_data_dict['note_events']  # 適切なキー名に置き換えてください
+
+        left_hand_chords = generate_left_hand_chord(note_events)
+
+        print(iteration, loss, left_hand_chords)  # 左手の和音も表示
 
         # Backward
         loss.backward()
@@ -266,7 +324,6 @@ def train(args):
             break
 
         iteration += 1
-
 
 if __name__ == '__main__':
 
