@@ -37,34 +37,37 @@ def note_to_pitch(note):
 
 def detect_chord_type(notes):
     """和音の種類を自動判定（簡略化した判定）"""
-    # 最低音ともう1つの音との間隔で簡易的に判定
+    # 最低音と2番目に低い音との間隔で簡易的に判定
     if len(notes) < 2:
         return "major"
-    lowest_note = min(notes, key=note_to_pitch)
-    other_note = notes[1]  # 次の最低音を選択
-    interval = (note_to_pitch(other_note) - note_to_pitch(lowest_note)) % 12
     
-    if interval in [3, 8]:  # マイナーに特有の間隔
+    sorted_notes = sorted(notes, key=note_to_pitch)
+    lowest_note = sorted_notes[0]
+    second_note = sorted_notes[1]
+    interval = (note_to_pitch(second_note) - note_to_pitch(lowest_note)) % 12
+
+    # 3度音程（例えばマイナー3度、8度でマイナー判定）
+    if interval in [3, 8]:  # マイナー特有の音程
         return "minor"
     return "major"
 
 def generate_left_hand_chord(note_events):
-    """最低音に基づいて自動でメジャー・マイナー和音を生成します。"""
+    """Generate easy three-note major or minor chords based on the lowest note."""
     chord_mappings = {
         'C': {'major': ['C', 'E', 'G'], 'minor': ['C', 'D#', 'G']},
         'C#': {'major': ['C#', 'E#', 'G#'], 'minor': ['C#', 'E', 'G#']},
         'D': {'major': ['D', 'F#', 'A'], 'minor': ['D', 'F', 'A']},
-        'D#': {'major': ['D#', 'F##', 'A#'], 'minor': ['D#', 'F#', 'A#']},
+        'D#': {'major': ['D#', 'G', 'A#'], 'minor': ['D#', 'F#', 'A#']},
         'E': {'major': ['E', 'G#', 'B'], 'minor': ['E', 'G', 'B']},
         'F': {'major': ['F', 'A', 'C'], 'minor': ['F', 'G#', 'C']},
         'F#': {'major': ['F#', 'A#', 'C#'], 'minor': ['F#', 'A', 'C#']},
         'G': {'major': ['G', 'B', 'D'], 'minor': ['G', 'A#', 'D']},
-        'G#': {'major': ['G#', 'B#', 'D#'], 'minor': ['G#', 'B', 'D#']},
+        'G#': {'major': ['G#', 'C', 'D#'], 'minor': ['G#', 'B', 'D#']},
         'A': {'major': ['A', 'C#', 'E'], 'minor': ['A', 'C', 'E']},
-        'A#': {'major': ['A#', 'C##', 'E#'], 'minor': ['A#', 'C#', 'E#']},
+        'A#': {'major': ['A#', 'D', 'F'], 'minor': ['A#', 'C#', 'E#']},
         'B': {'major': ['B', 'D#', 'F#'], 'minor': ['B', 'D', 'F#']}
     }
-    
+
     left_hand_chords = []
     for notes in note_events:
         if not notes:
@@ -72,9 +75,11 @@ def generate_left_hand_chord(note_events):
             continue
 
         lowest_note = min(notes, key=note_to_pitch)
-        chord_type = detect_chord_type(notes)  # 自動判定された和音タイプ
+        chord_type = detect_chord_type(notes)
         chord = chord_mappings.get(lowest_note, {}).get(chord_type, [])
-        left_hand_chords.append(chord)
+        
+        # Ensure we only have 3 notes in each chord
+        left_hand_chords.append(chord[:3])
 
     print(f"Generated left-hand chords: {left_hand_chords}")
     return left_hand_chords
