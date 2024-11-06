@@ -78,7 +78,7 @@ def generate_left_hand_chord(note_events):
         chord_type = detect_chord_type(notes)
         chord = chord_mappings.get(lowest_note, {}).get(chord_type, [])
         
-        # Ensure we only have 3 notes in each chord
+        # Only select the first 3 notes of the chord
         left_hand_chords.append(chord[:3])
 
     print(f"Generated left-hand chords: {left_hand_chords}")
