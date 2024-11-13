@@ -9,10 +9,10 @@ python3 pytorch/inference.py --model_type=$MODEL_TYPE --checkpoint_path=$CHECKPO
 
 # ============ Train piano transcription system from scratch ============
 # MAESTRO dataset directory. Users need to download MAESTRO dataset into this folder.
-DATASET_DIR="./datasets/maestro/dataset_root"
+DATASET_DIR="/Users/keitakato/Desktop/PianoScore/piano_transcription1/maestro"
 
 # Modify to your workspace
-WORKSPACE="./workspaces/piano_transcription"
+WORKSPACE="/Users/keitakato/Desktop/PianoScore/piano_transcription1"
 
 # Pack audio files to hdf5 format for training
 python3 utils/features.py pack_maestro_dataset_to_hdf5 --dataset_dir=$DATASET_DIR --workspace=$WORKSPACE
